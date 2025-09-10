@@ -1,18 +1,17 @@
 namespace AppKitHybrid;
 
+using CoreGraphics;
+using AppKit;
+
 public sealed class MainWindowController : NSWindowController
 {
-    private readonly string _url;
-
     public MainWindowController() : base(new NSWindow(
         new CGRect(0, 0, 1200, 800),
-        NSWindowStyle.Titled | NSWindowStyle.Closable | NSWindowStyle.Resizable |
-        NSWindowStyle.Miniaturizable,
+        NSWindowStyle.Titled | NSWindowStyle.Closable | NSWindowStyle.Resizable | NSWindowStyle.Miniaturizable,
         NSBackingStore.Buffered,
         deferCreation: false))
     {
-        // _url = url;
-        Window.Title = "Blazor Hybrid (AppKit)";
+        Window.Title = "Blazor Hybrid (In-Process)";
         ContentViewController = new WebViewController();
         Window.Center();
     }

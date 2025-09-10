@@ -1,10 +1,17 @@
-using WebKit;
-
 namespace AppKitHybrid;
+
+using CoreGraphics;
+using Foundation;
+using WebKit;
+using AppKit;
 
 public sealed class WebViewController : NSViewController, IWKNavigationDelegate
 {
     private WKWebView? _webView;
+
+    public WebViewController()
+    {
+    }
 
     public override void LoadView()
     {
@@ -15,28 +22,37 @@ public sealed class WebViewController : NSViewController, IWKNavigationDelegate
     {
         base.ViewDidLoad();
 
-        var config = new WKWebViewConfiguration
-        {
-            Preferences = new WKPreferences
-            {
-                JavaScriptEnabled = true,
-                JavaScriptCanOpenWindowsAutomatically = true
-            }
-        };
+        var bundleRoot = NSBundle.MainBundle.ResourcePath ?? string.Empty;
+        var wwwroot = System.IO.Path.Combine(bundleRoot, "wwwroot");
 
-        _webView = new BlazorWebView(Program.ServiceProvider)
-        {
-            Frame = View.Bounds,
-            AutoresizingMask = NSViewResizingMask.WidthSizable | NSViewResizingMask.HeightSizable
-        };
+        var config = new WKWebViewConfiguration();
+        config.SetUrlSchemeHandler(new AppUrlSchemeHandler(wwwroot), "app");
 
-        // _webView = new WKWebView(View.Bounds, config)
-        // {
-        //     AutoresizingMask = NSViewResizingMask.WidthSizable | NSViewResizingMask.HeightSizable,
-        //     NavigationDelegate = this
-        // };
+        _webView = new WKWebView(View.Bounds, config)
+        {
+            AutoresizingMask = NSViewResizingMask.WidthSizable | NSViewResizingMask.HeightSizable,
+            NavigationDelegate = this,
+            Inspectable = true
+        };
 
         View.AddSubview(_webView);
-        // _webView.LoadRequest(new NSUrlRequest(new NSUrl(url)));
+
+        // Load the app's entry point in-process via the custom scheme.
+        var startUrl = new NSUrl("app://localhost");
+        _webView.LoadRequest(new NSUrlRequest(startUrl));
+    }
+
+    [Export("webView:decidePolicyForNavigationAction:decisionHandler:")]
+    public void DecidePolicy(WKWebView webView, WKNavigationAction navigationAction, System.Action<WKNavigationActionPolicy> decisionHandler)
+    {
+        var url = navigationAction.Request?.Url;
+        if (url is not null && (url.Scheme == "http" || url.Scheme == "https"))
+        {
+            NSWorkspace.SharedWorkspace.OpenUrl(url);
+            decisionHandler(WKNavigationActionPolicy.Cancel);
+            return;
+        }
+
+        decisionHandler(WKNavigationActionPolicy.Allow);
     }
 }

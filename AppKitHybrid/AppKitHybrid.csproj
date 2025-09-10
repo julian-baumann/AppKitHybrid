@@ -1,11 +1,12 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk;Microsoft.NET.Sdk.Razor">
     <PropertyGroup>
         <TargetFramework>net9.0-macos</TargetFramework>
         <OutputType>Exe</OutputType>
         <Nullable>enable</Nullable>
         <ImplicitUsings>true</ImplicitUsings>
         <SupportedOSPlatformVersion>12.0</SupportedOSPlatformVersion>
-        <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
+<!--        <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>-->
+        <StaticWebAssetsEnabled>true</StaticWebAssetsEnabled>
 
         <!--
           Enable full trimming in Release mode.
@@ -13,41 +14,15 @@
         -->
         <TrimMode Condition="'$(Configuration)' == 'Release'">full</TrimMode>
     </PropertyGroup>
-    
+
     <ItemGroup>
         <ProjectReference Include="..\BlazorApp\BlazorApp.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
         <FrameworkReference Include="Microsoft.AspNetCore.App" />
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebView" Version="9.0.8" />
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Microsoft.AspNetCore.Components.WebView" Version="9.0.8" />
+        <Content Remove="Assets.xcassets/**" />
+        <AssetCatalog Include="Assets.xcassets/**" />
     </ItemGroup>
-    
-    <!-- === PHYSICAL STATIC FILES FROM BLAZORAPP === -->
-    <!-- 1) Copy everything under BlazorApp/wwwroot/** INTO Contents/Resources/wwwroot -->
-    <ItemGroup>
-        <BundleResource Include="..\BlazorApp\wwwroot\**\*">
-            <!-- This *Link* (logical path) determines where it lands inside the .app -->
-            <Link>Resources\wwwroot\%(RecursiveDir)%(Filename)%(Extension)</Link>
-        </BundleResource>
-    </ItemGroup>
-
-    <!-- 2) Copy the generated scoped CSS as BlazorApp.styles.css into wwwroot -->
-    <ItemGroup>
-        <BundleResource Include="..\BlazorApp\obj\$(Configuration)\net9.0\scopedcss\projectbundle\BlazorApp.bundle.scp.css">
-            <Link>Resources\wwwroot\BlazorApp.styles.css</Link>
-        </BundleResource>
-    </ItemGroup>
-
-    <!-- Optional: fail the build with a helpful message if the scoped CSS wasn’t generated yet -->
-    <Target Name="VerifyScopedCssCopied" AfterTargets="Build">
-        <PropertyGroup>
-            <_ScopedCss>..\BlazorApp\obj\$(Configuration)\net9.0\scopedcss\projectbundle\BlazorApp.bundle.scp.css</_ScopedCss>
-        </PropertyGroup>
-        <Warning Text="Blazor scoped CSS not found at $(_ScopedCss). If you don't use CSS isolation, ignore this."
-                 Condition="!Exists('$(_ScopedCss)')" />
-    </Target>
 </Project>
