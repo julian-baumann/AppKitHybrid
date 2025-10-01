@@ -41,19 +41,9 @@ internal class Program : IHostedService
 
         builder.Services
             .AddBlazorWebView()
-            .AddSingleton(new BlazorWebViewOptions
-            {
-                RootComponent = typeof(BlazorApp.Components.App),
-                ContentRoot = "wwwroot",
-                RelativeHostPath = "wwwroot/index.html"
-            })
             .AddHostedService<Program>();
 
         await using var app = builder.Build();
-
-        var pathToResources = GetResourcePath("BlazorApp.staticwebassets.endpoints.json");
-
-        app.MapStaticAssets(pathToResources);
 
         app.MapRazorComponents<BlazorApp.Components.App>()
             .AddInteractiveServerRenderMode();

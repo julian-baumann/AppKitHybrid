@@ -5,14 +5,9 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>true</ImplicitUsings>
         <SupportedOSPlatformVersion>12.0</SupportedOSPlatformVersion>
-
-        <!--
-          Enable full trimming in Release mode.
-          To learn more, see: https://learn.microsoft.com/dotnet/core/deploying/trimming/trimming-options#trimming-granularity
-        -->
         <TrimMode Condition="'$(Configuration)' == 'Release'">full</TrimMode>
-
-        <CodesignDependsOn>$(CodesignDependsOn);CopyBlazorStaticWebAssets</CodesignDependsOn>
+        
+        <StaticWebAssetsEnabled>true</StaticWebAssetsEnabled>
     </PropertyGroup>
 
     <ItemGroup>
@@ -29,17 +24,34 @@
         <BundleResource Include="wwwroot/**" />
     </ItemGroup>
 
-    <Target Name="CopyBlazorStaticWebAssets">
+    <PropertyGroup>
+        <CodesignDependsOn>$(CodesignDependsOn);CopyBlazorAppRclAssets</CodesignDependsOn>
+    </PropertyGroup>
+
+    <Target Name="CopyBlazorAppRclAssets">
+        <PropertyGroup>
+            <_RclName>BlazorApp</_RclName>
+            <_RclDir>$(MSBuildThisFileDirectory)..\BlazorApp\</_RclDir>
+            <_Dest>$(AppBundleDir)/Contents/Resources/wwwroot/_content/$(_RclName)</_Dest>
+        </PropertyGroup>
+
         <ItemGroup>
-            <_StaticAssets Include="$(OutputPath)$(AssemblyName).staticwebassets.runtime.json"
-                           Condition="Exists('$(OutputPath)$(AssemblyName).staticwebassets.runtime.json')" />
-            <_StaticAssets Include="$(OutputPath)$(AssemblyName).staticwebassets.endpoints.json"
-                           Condition="Exists('$(OutputPath)$(AssemblyName).staticwebassets.endpoints.json')" />
+            <!-- Authored static files -->
+            <_RclFiles Include="$(_RclDir)wwwroot/**" />
+            <!-- Generated scoped CSS (includes *_bundle.scp.css, component CSS, etc.) -->
+            <_RclFiles Include="$(_RclDir)obj/$(Configuration)/net9.0/scopedcss/**" />
         </ItemGroup>
 
-        <Copy SourceFiles="@(_StaticAssets)"
-              DestinationFolder="$(AppBundleDir)/Contents/Resources"
-              SkipUnchangedFiles="true"
-              Condition="'@(_StaticAssets)' != ''" />
+        <MakeDir Directories="$(_Dest)" />
+
+        <Copy
+                SourceFiles="@(_RclFiles)"
+                DestinationFiles="@(_RclFiles->'$(_Dest)/%(RecursiveDir)%(Filename)%(Extension)')"
+                SkipUnchangedFiles="true"
+                Condition="'@(_RclFiles)' != ''" />
+
+        <!-- Optional: fail if nothing was copied -->
+        <Error Text="No RCL assets found in BlazorApp (check paths/Configuration/TFM)."
+               Condition="'@(_RclFiles)' == ''" />
     </Target>
 </Project>

@@ -16,7 +16,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <OutputType>Library</OutputType>
         <AssemblyName>BlazorApp</AssemblyName>
-        <GenerateStaticWebAssetsEndpoints>false</GenerateStaticWebAssetsEndpoints>
+        <StaticWebAssetsEnabled>true</StaticWebAssetsEnabled>
     </PropertyGroup>
 
     <ItemGroup>
