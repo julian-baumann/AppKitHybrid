@@ -5,14 +5,14 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>true</ImplicitUsings>
         <SupportedOSPlatformVersion>12.0</SupportedOSPlatformVersion>
-<!--        <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>-->
-        <StaticWebAssetsEnabled>true</StaticWebAssetsEnabled>
 
         <!--
           Enable full trimming in Release mode.
           To learn more, see: https://learn.microsoft.com/dotnet/core/deploying/trimming/trimming-options#trimming-granularity
         -->
         <TrimMode Condition="'$(Configuration)' == 'Release'">full</TrimMode>
+
+        <CodesignDependsOn>$(CodesignDependsOn);CopyBlazorStaticWebAssets</CodesignDependsOn>
     </PropertyGroup>
 
     <ItemGroup>
@@ -24,5 +24,22 @@
     <ItemGroup>
         <Content Remove="Assets.xcassets/**" />
         <AssetCatalog Include="Assets.xcassets/**" />
+
+        <Content Remove="wwwroot/**" />
+        <BundleResource Include="wwwroot/**" />
     </ItemGroup>
+
+    <Target Name="CopyBlazorStaticWebAssets">
+        <ItemGroup>
+            <_StaticAssets Include="$(OutputPath)$(AssemblyName).staticwebassets.runtime.json"
+                           Condition="Exists('$(OutputPath)$(AssemblyName).staticwebassets.runtime.json')" />
+            <_StaticAssets Include="$(OutputPath)$(AssemblyName).staticwebassets.endpoints.json"
+                           Condition="Exists('$(OutputPath)$(AssemblyName).staticwebassets.endpoints.json')" />
+        </ItemGroup>
+
+        <Copy SourceFiles="@(_StaticAssets)"
+              DestinationFolder="$(AppBundleDir)/Contents/Resources"
+              SkipUnchangedFiles="true"
+              Condition="'@(_StaticAssets)' != ''" />
+    </Target>
 </Project>

@@ -7,7 +7,7 @@
 <!--        <OutputType>Library</OutputType>-->
 <!--        <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>-->
 <!--        <StaticWebAssetsEnabled>true</StaticWebAssetsEnabled>-->
-<!--        <GenerateStaticWebAssetsEndpoints>true</GenerateStaticWebAssetsEndpoints>-->
+
 <!--    </PropertyGroup>-->
 
     <PropertyGroup>
@@ -16,6 +16,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <OutputType>Library</OutputType>
         <AssemblyName>BlazorApp</AssemblyName>
+        <GenerateStaticWebAssetsEndpoints>false</GenerateStaticWebAssetsEndpoints>
     </PropertyGroup>
 
     <ItemGroup>

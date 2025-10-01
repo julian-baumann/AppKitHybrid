@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting.StaticWebAssets;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -7,11 +9,23 @@ namespace AppKitHybrid;
 internal class Program : IHostedService
 {
     public static IServiceProvider ServiceProvider { get; private set; }
+    
+    private static string GetResourcePath(string resourceFileName)
+    {
+        var exePath = AppContext.BaseDirectory;
+
+        var contentsDir = Directory.GetParent(exePath)?.FullName;
+        return contentsDir is null
+            ? throw new InvalidOperationException("Unable to locate .app Contents directory.")
+            : Path.Combine(contentsDir, "Resources", resourceFileName);
+    }
 
     private static async Task Main(string[] args)
     {
-        var builder = Host.CreateApplicationBuilder(args);
-        //appBuilder.Logging.AddDebug();
+        var builder = WebApplication.CreateBuilder(args);
+
+        // StaticWebAssetsLoader.UseStaticWebAssets(builder.Environment, builder.Configuration);
+
         builder.Logging.AddSimpleConsole(
                 options => {
                     options.ColorBehavior = Microsoft.Extensions.Logging.Console.LoggerColorBehavior.Disabled;
@@ -20,7 +34,11 @@ internal class Program : IHostedService
                     options.TimestampFormat = "hh:mm:ss ";
                 })
             .SetMinimumLevel(LogLevel.Information);
-        
+
+        builder.Services
+            .AddRazorComponents()
+            .AddInteractiveServerComponents();
+
         builder.Services
             .AddBlazorWebView()
             .AddSingleton(new BlazorWebViewOptions
@@ -31,9 +49,16 @@ internal class Program : IHostedService
             })
             .AddHostedService<Program>();
 
-        using var host = builder.Build();
+        await using var app = builder.Build();
 
-        await host.RunAsync();
+        var pathToResources = GetResourcePath("BlazorApp.staticwebassets.endpoints.json");
+
+        app.MapStaticAssets(pathToResources);
+
+        app.MapRazorComponents<BlazorApp.Components.App>()
+            .AddInteractiveServerRenderMode();
+
+        await app.RunAsync();
     }
 
     public Program(IHostApplicationLifetime lifetime, IServiceProvider serviceProvider)
