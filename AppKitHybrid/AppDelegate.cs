@@ -6,12 +6,17 @@ using Foundation;
 [Register("AppDelegate")]
 public sealed class AppDelegate : NSApplicationDelegate
 {
-    private MainWindowController? _windowController;
-
     public override void DidFinishLaunching(NSNotification notification)
     {
-        _windowController = new MainWindowController();
-        _windowController.ShowWindow(this);
-        NSApplication.SharedApplication.ActivateIgnoringOtherApps(true);
+        var window = new NSWindow(
+            new CGRect(0, 0, 1200, 800),
+            NSWindowStyle.Titled | NSWindowStyle.Closable | NSWindowStyle.Resizable,
+            NSBackingStore.Buffered,
+            deferCreation: false);
+
+        window.Title = "AppKitHybrid";
+        window.Center();
+        window.ContentViewController = new BlazorWebView();
+        window.MakeKeyAndOrderFront(null);
     }
 }
